@@ -5,6 +5,6 @@
   <h1>Could not load data from MySQL</h1>
   <p><strong>Server message:</strong> {{ message }}</p>
   <p>{{ hint|safe }}</p>
-  <p class="vp-hint hint">Then restart the app (<code>Ctrl+C</code> and <code>python app.py</code> again).</p>
+  <p class="vp-hint hint">After fixing env vars on Railway, trigger a redeploy. Locally: <code>Ctrl+C</code> then <code>python app.py</code>.</p>
 </div>
 {% endblock %}

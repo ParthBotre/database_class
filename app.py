@@ -19,6 +19,16 @@ load_dotenv(Path(__file__).resolve().parent / ".env")
 app = Flask(__name__)
 
 
+def _mysql_database_name(path_from_url: str = "") -> str:
+    """Railway may inject MYSQL_DATABASE=railway from the plugin; MYSQL_DATABASE_OVERRIDE wins."""
+    override = (os.environ.get("MYSQL_DATABASE_OVERRIDE") or os.environ.get("MYSQL_DATABASE") or "").strip()
+    if override:
+        return override
+    if path_from_url:
+        return path_from_url
+    return "VideoPlatform"
+
+
 @app.errorhandler(mysql_errors.Error)
 def handle_mysql_error(err):
     msg = str(err)
@@ -42,6 +52,15 @@ def handle_mysql_error(err):
             "<code>MySQL</code>). Optionally set <code>MYSQL_DATABASE=VideoPlatform</code>. "
             "Redeploy after saving."
         )
+    elif "1146" in msg or "doesn't exist" in msg:
+        hint = (
+            "Wrong database or schema not loaded. Railway’s URL often ends in <code>/railway</code>, but "
+            "<code>project.sql</code> creates tables in <code>VideoPlatform</code>. "
+            "On your <strong>web</strong> service set <code>MYSQL_DATABASE=VideoPlatform</code> "
+            "(or if Railway keeps resetting it, set <code>MYSQL_DATABASE_OVERRIDE=VideoPlatform</code>), "
+            "redeploy, and ensure you ran <code>project.sql</code> + <code>seed_sample_data.sql</code> on this server "
+            "(e.g. <code>railway connect MySQL</code> then <code>SOURCE …/project.sql</code>)."
+        )
     else:
         hint = (
             "Confirm MySQL is running, the schema matches <code>project.sql</code>, "
@@ -59,8 +78,7 @@ def db_config():
             raise ValueError("MYSQL_URL must include a host (e.g. mysql://user:pass@host:3306/db)")
         path_db = parsed.path.lstrip("/").split("?", 1)[0]
         path_db = unquote(path_db) if path_db else ""
-        # Prefer MYSQL_DATABASE when set (Railway URLs often end in /railway; schema may live in VideoPlatform).
-        db_name = (os.environ.get("MYSQL_DATABASE") or "").strip() or path_db or "VideoPlatform"
+        db_name = _mysql_database_name(path_db)
         cfg = {
             "host": parsed.hostname,
             "port": int(parsed.port or 3306),
@@ -74,7 +92,7 @@ def db_config():
             "port": int(os.environ.get("MYSQL_PORT", "3306")),
             "user": os.environ.get("MYSQL_USER", "root"),
             "password": os.environ.get("MYSQL_PASSWORD", ""),
-            "database": os.environ.get("MYSQL_DATABASE", "VideoPlatform"),
+            "database": _mysql_database_name(""),
         }
     # If Workbench uses TLS but the Python client fails on SSL, try MYSQL_SSL_DISABLED=true
     if os.environ.get("MYSQL_SSL_DISABLED", "").lower() in ("1", "true", "yes"):
