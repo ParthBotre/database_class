@@ -6,6 +6,7 @@ Copy env.example to .env and set MYSQL_PASSWORD (and user if needed).
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 
 import mysql.connector
 from dotenv import load_dotenv
@@ -42,13 +43,31 @@ def handle_mysql_error(err):
 
 
 def db_config():
-    cfg = {
-        "host": os.environ.get("MYSQL_HOST", "127.0.0.1"),
-        "port": int(os.environ.get("MYSQL_PORT", "3306")),
-        "user": os.environ.get("MYSQL_USER", "root"),
-        "password": os.environ.get("MYSQL_PASSWORD", ""),
-        "database": os.environ.get("MYSQL_DATABASE", "VideoPlatform"),
-    }
+    # Railway: add MYSQL_URL = ${{ MySQL.MYSQL_URL }} on the web service (private or public URL).
+    mysql_url = (os.environ.get("MYSQL_URL") or "").strip()
+    if mysql_url:
+        parsed = urlparse(mysql_url)
+        if not parsed.hostname:
+            raise ValueError("MYSQL_URL must include a host (e.g. mysql://user:pass@host:3306/db)")
+        path_db = parsed.path.lstrip("/").split("?", 1)[0]
+        path_db = unquote(path_db) if path_db else ""
+        # Prefer MYSQL_DATABASE when set (Railway URLs often end in /railway; schema may live in VideoPlatform).
+        db_name = (os.environ.get("MYSQL_DATABASE") or "").strip() or path_db or "VideoPlatform"
+        cfg = {
+            "host": parsed.hostname,
+            "port": int(parsed.port or 3306),
+            "user": unquote(parsed.username) if parsed.username else "",
+            "password": unquote(parsed.password) if parsed.password else "",
+            "database": db_name,
+        }
+    else:
+        cfg = {
+            "host": os.environ.get("MYSQL_HOST", "127.0.0.1"),
+            "port": int(os.environ.get("MYSQL_PORT", "3306")),
+            "user": os.environ.get("MYSQL_USER", "root"),
+            "password": os.environ.get("MYSQL_PASSWORD", ""),
+            "database": os.environ.get("MYSQL_DATABASE", "VideoPlatform"),
+        }
     # If Workbench uses TLS but the Python client fails on SSL, try MYSQL_SSL_DISABLED=true
     if os.environ.get("MYSQL_SSL_DISABLED", "").lower() in ("1", "true", "yes"):
         cfg["ssl_disabled"] = True
