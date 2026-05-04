@@ -157,24 +157,55 @@ So you can force **`VideoPlatform`** even when the URL path says **`railway`**.
 
 Your **local** MySQL and **Railway’s** MySQL are **different**. After deploy, load **`project.sql`** and **`seed_sample_data.sql`** against **Railway’s** server.
 
-**Option A — Railway CLI (tunnel)**
+#### Option A — Railway CLI (tunnel): migrate from local Workbench → Railway
+
+Install and log in once:
 
 ```bash
+brew install railway
 railway login
-railway link    # in repo folder; pick project
+```
+
+You’ll be asked to open the browser — choose **yes**, complete login, then return to the terminal.
+
+From your **`video_platform_ui`** repo folder (or any folder where you want the link saved), link this machine to the right Railway resources:
+
+```bash
+railway link
+```
+
+The prompts walk you through **workspace** → **project** → **environment** (e.g. **production**) → **service** → choose **MySQL**. When it finishes you should see something like **linked successfully**.
+
+Open a tunnel into Railway’s MySQL (pick the MySQL service name if yours isn’t exactly `MySQL`):
+
+```bash
 railway connect MySQL
 ```
 
-That opens **`mysql`** connected to the cloud DB. Then:
+That starts **`mysql`** connected to the **cloud** database (not your laptop). At the **`mysql>`** prompt, load/migrate the schema and seed — replace **`/your_path`** with the real path to this repo on your machine:
 
 ```sql
-SOURCE /full/path/to/project.sql;
-SOURCE /full/path/to/seed_sample_data.sql;
+SOURCE /your_path/video_platform_ui/project.sql;
+SOURCE /your_path/video_platform_ui/seed_sample_data.sql;
 ```
 
-Keep **`railway connect`** running while you use that session.
+Example on macOS if the project lives under your user directory:
 
-**Option B — Public host in Workbench**
+```sql
+SOURCE /Users/you/cs4354/video_platform_ui/project.sql;
+SOURCE /Users/you/cs4354/video_platform_ui/seed_sample_data.sql;
+```
+
+Keep **`railway connect`** running while this session is open. Verify when done:
+
+```sql
+USE VideoPlatform;
+SHOW TABLES;
+```
+
+**Note:** This loads the **same SQL files** you use locally; it does not automatically copy arbitrary rows you only inserted in Workbench on `127.0.0.1`. To move **custom local data**, export from local (e.g. **`mysqldump`**) and import on Railway, or run equivalent **`INSERT`** statements against Railway.
+
+#### Option B — Public host in Workbench
 
 Use **Public** connection details from Railway MySQL → **Connect**.  
 Hostname = proxy host only (not the full `mysql://` URL). Port = public port.
