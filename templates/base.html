@@ -18,6 +18,7 @@
         <a href="{{ url_for('comments') }}">Comments</a>
         <a href="{{ url_for('subscriptions') }}">Subscriptions</a>
         <a href="{{ url_for('subtitles') }}">Subtitles</a>
+        <a href="{{ url_for('sql_console') }}">SQL</a>
       </nav>
     </div>
   </header>
@@ -26,6 +27,6 @@
       {% block body %}{% endblock %}
     </div>
   </main>
-  <footer class="vp-footer">Local read-only browser · MySQL VideoPlatform schema</footer>
+  <footer class="vp-footer">VideoPlatform UI · browse tables or use /sql when enabled</footer>
 </body>
 </html>

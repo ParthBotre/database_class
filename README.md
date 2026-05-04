@@ -24,7 +24,7 @@ Optional for deployment: **Railway** account, **GitHub** repo, **Railway CLI** f
 | `main.py` | WSGI shim (`from app import app`) for hosts that run `gunicorn main:app` |
 | `project.sql` | Creates **`VideoPlatform`** DB, DDL, views, sample DML |
 | `seed_sample_data.sql` | Inserts seed rows (run **after** `project.sql`) |
-| `templates/` | Jinja HTML (`base.html`, `index.html`, `table.html`, `error.html`) |
+| `templates/` | Jinja HTML (`base.html`, `index.html`, `table.html`, `error.html`, `sql.html`) |
 | `static/css/` | Styles |
 | `requirements.txt` | Python dependencies |
 | `env.example` | Template for **`.env`** (safe to commit) |
@@ -87,8 +87,25 @@ Open **http://127.0.0.1:5000** (or the port shown if **`PORT`** is set).
 | `/comments` | Comments |
 | `/subscriptions` | Subscription edges |
 | `/subtitles` | Subtitle previews |
+| `/sql` | **Optional** SQL console — run statements from the browser when enabled (see below) |
 
-The app is **read-only**: there are no web forms that insert or update data. Changes to data happen in MySQL (Workbench, CLI, or SQL scripts).
+By default, browse pages are read-only. With **`ENABLE_SQL_CONSOLE=true`**, **`/sql`** lets you run **one statement at a time** (`SELECT`, `INSERT`, `UPDATE`, `DELETE`, etc.) and see results or row counts. **`DROP DATABASE`** / **`DROP SCHEMA`** are blocked.
+
+**Railway / production:** When **`RAILWAY_ENVIRONMENT`** is set (Railway deploy), **`SQL_CONSOLE_PASSWORD` is required** whenever the console is enabled—otherwise **`/sql`** stays locked so strangers cannot run SQL. **Locally**, you can omit **`SQL_CONSOLE_PASSWORD`** for convenience.
+
+---
+
+## SQL web console (`/sql`)
+
+1. Set **`ENABLE_SQL_CONSOLE=true`** in **`.env`** (local) or Railway web **Variables**, redeploy/restart.
+2. **On Railway**, also set **`SQL_CONSOLE_PASSWORD`** to a long random secret (required).
+3. Open **`/sql`** (also linked from the nav as **SQL**), enter the console password if prompted, then paste **one** SQL statement and click **Run**.
+   - **`SELECT` / `SHOW`**: results render as a table.
+   - **`INSERT` / `UPDATE` / `DELETE` / DDL**: shows rows affected / last insert id when applicable.
+
+Passwords are compared with a constant-time check (`hmac.compare_digest`). This is still a **shared secret**, not full user login—anyone with the password can run SQL.
+
+When the console is **disabled** or **locked**, **`/sql`** returns **403** with instructions.
 
 ---
 
@@ -106,6 +123,8 @@ Create **`.env`** next to **`app.py`** (copy from **`env.example`**).
 | `MYSQL_PASSWORD` | Usually yes | MySQL password |
 | `MYSQL_DATABASE` | No | Default `VideoPlatform` |
 | `MYSQL_SSL_DISABLED` | No | Set `true` if localhost SSL errors |
+| `ENABLE_SQL_CONSOLE` | No | Set **`true`** to enable **`/sql`** (off by default) |
+| `SQL_CONSOLE_PASSWORD` | No locally; **yes on Railway** if console on | Shared secret for **`/sql`**; **required** when deploying on Railway with the console enabled |
 
 Leave **`MYSQL_URL`** unset locally unless you are testing a cloud URL.
 

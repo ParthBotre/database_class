@@ -307,6 +307,108 @@ body.vp-app {
   font-size: 0.95rem;
 }
 
+/* ——— SQL console ——— */
+.vp-page--sql h1 {
+  margin-bottom: 0.5rem;
+}
+
+.vp-sql-intro {
+  color: var(--vp-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+  max-width: 52rem;
+}
+
+.vp-sql-error {
+  padding: 0.85rem 1rem;
+  border-radius: var(--vp-radius-sm);
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  color: var(--vp-danger);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.vp-sql-form {
+  margin-top: 0.5rem;
+  max-width: 52rem;
+}
+
+.vp-sql-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vp-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.vp-sql-textarea {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  font-family: var(--vp-mono);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--vp-text);
+  background: var(--vp-surface-elevated);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-sm);
+  resize: vertical;
+  min-height: 12rem;
+}
+
+.vp-sql-textarea:focus {
+  outline: none;
+  border-color: var(--vp-accent);
+  box-shadow: 0 0 0 3px var(--vp-accent-soft);
+}
+
+.vp-sql-input {
+  width: 100%;
+  max-width: 24rem;
+  padding: 0.55rem 0.75rem;
+  font-family: var(--vp-mono);
+  font-size: 0.875rem;
+  color: var(--vp-text);
+  background: var(--vp-surface-elevated);
+  border: 1px solid var(--vp-border);
+  border-radius: var(--vp-radius-sm);
+  margin-bottom: 1rem;
+}
+
+.vp-sql-actions {
+  margin-top: 0.75rem;
+}
+
+.vp-sql-submit {
+  appearance: none;
+  cursor: pointer;
+  padding: 0.55rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--vp-bg);
+  background: var(--vp-accent);
+  border: none;
+  border-radius: var(--vp-radius-sm);
+  transition: background 0.15s ease;
+}
+
+.vp-sql-submit:hover {
+  background: var(--vp-accent-hover);
+}
+
+.vp-sql-result-title {
+  font-size: 1.05rem;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.vp-sql-mutate {
+  margin-top: 1.5rem;
+  max-width: 52rem;
+}
+
 /* ——— Footer ——— */
 .vp-footer {
   max-width: 1200px;

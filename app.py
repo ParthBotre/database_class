@@ -3,6 +3,7 @@ Local read-only browser UI for the VideoPlatform schema (project.sql + seed_samp
 Copy env.example to .env and set MYSQL_PASSWORD (and user if needed).
 """
 
+import hmac
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -10,13 +11,115 @@ from urllib.parse import unquote, urlparse
 
 import mysql.connector
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from mysql.connector import errors as mysql_errors
 
 # Always load .env from this folder (not the shell cwd).
 load_dotenv(Path(__file__).resolve().parent / ".env")
 
 app = Flask(__name__)
+
+
+def _env_truthy(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def sql_console_enabled() -> bool:
+    """True if ENABLE_SQL_CONSOLE is set (raw flag)."""
+    return _env_truthy("ENABLE_SQL_CONSOLE")
+
+
+def _railway_deploy() -> bool:
+    """Railway sets RAILWAY_ENVIRONMENT in deployed containers."""
+    return bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+
+
+def _sql_console_password_configured() -> bool:
+    return bool((os.environ.get("SQL_CONSOLE_PASSWORD") or "").strip())
+
+
+def sql_console_active() -> bool:
+    """True when /sql may show the form: enabled, and on Railway only if a console password is set."""
+    if not sql_console_enabled():
+        return False
+    if _railway_deploy() and not _sql_console_password_configured():
+        return False
+    return True
+
+
+def _sql_console_password_required() -> bool:
+    """Show password field when a console password is configured."""
+    return _sql_console_password_configured()
+
+
+def _sql_console_password_ok() -> bool:
+    expected = (os.environ.get("SQL_CONSOLE_PASSWORD") or "").strip()
+    if not expected:
+        return True
+    got = (request.form.get("sql_console_password") or "").strip()
+    return hmac.compare_digest(got.encode("utf-8"), expected.encode("utf-8"))
+
+
+def _sql_console_gate_response():
+    """403 + template if SQL console must not run. Returns None if OK to proceed."""
+    if not sql_console_enabled():
+        return render_template("sql.html", disabled=True, disabled_reason="off"), 403
+    if _railway_deploy() and not _sql_console_password_configured():
+        return render_template("sql.html", disabled=True, disabled_reason="railway_needs_password"), 403
+    return None
+
+
+def _blocked_sql_reason(sql: str) -> str | None:
+    text = (sql or "").strip()
+    if not text:
+        return "Empty statement."
+    lines = []
+    for ln in text.splitlines():
+        s = ln.strip()
+        if not s or s.startswith("--"):
+            continue
+        lines.append(s)
+    core = " ".join(lines).strip()
+    if not core:
+        return "Empty statement (comments only)."
+    u = core.upper()
+    if u.startswith("DROP DATABASE") or u.startswith("DROP SCHEMA"):
+        return "DROP DATABASE / DROP SCHEMA are blocked from the web console."
+    return None
+
+
+def _run_sql_console_statement(sql: str):
+    """Returns (kind, payload, error) where kind is 'rows'|'mutate'|None."""
+    reason = _blocked_sql_reason(sql)
+    if reason:
+        return None, None, reason
+
+    conn = mysql.connector.connect(**db_config())
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute(sql)
+        if cur.description:
+            rows = cur.fetchall()
+            cols = [d[0] for d in cur.description]
+            conn.commit()
+            return "rows", {"columns": cols, "rows": rows}, None
+        conn.commit()
+        return (
+            "mutate",
+            {"rowcount": cur.rowcount, "lastrowid": cur.lastrowid},
+            None,
+        )
+    except mysql_errors.Error as err:
+        conn.rollback()
+        return None, None, str(err)
+    finally:
+        cur.close()
+        conn.close()
+
+
+@app.context_processor
+def inject_sql_console_flag():
+    return {"sql_console_active": sql_console_active()}
 
 
 def _mysql_database_name(path_from_url: str = "") -> str:
@@ -205,6 +308,41 @@ def subtitles():
         """
     )
     return render_template("table.html", title="Video subtitles", rows=rows)
+
+
+@app.route("/sql", methods=["GET", "POST"])
+def sql_console():
+    """Opt-in SQL runner. On Railway, SQL_CONSOLE_PASSWORD is required when the console is enabled."""
+    blocked = _sql_console_gate_response()
+    if blocked is not None:
+        return blocked
+
+    sql_text = ""
+    result_kind = None
+    payload = None
+    error = None
+
+    if request.method == "POST":
+        if _sql_console_password_configured() and not _sql_console_password_ok():
+            error = "Invalid SQL console password."
+            sql_text = request.form.get("sql", "")
+        else:
+            sql_text = request.form.get("sql", "") or ""
+            kind, data, err = _run_sql_console_statement(sql_text)
+            if err:
+                error = err
+            else:
+                result_kind, payload = kind, data
+
+    return render_template(
+        "sql.html",
+        disabled=False,
+        sql_text=sql_text,
+        result_kind=result_kind,
+        payload=payload,
+        error=error,
+        sql_console_password_required=_sql_console_password_required(),
+    )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}SQL console — VideoPlatform{% endblock %}
+{% block body %}
+<div class="vp-page vp-page--sql">
+  <h1>SQL console</h1>
+
+  {% if disabled %}
+    {% if disabled_reason == 'railway_needs_password' %}
+    <p class="vp-hint hint">
+      On <strong>Railway</strong>, the SQL console cannot run without a shared secret (otherwise anyone on the
+      internet could run SQL). Set <code>SQL_CONSOLE_PASSWORD</code> to a long random string in your web
+      service <strong>Variables</strong>, keep <code>ENABLE_SQL_CONSOLE=true</code>, then redeploy.
+      Locally you can still use the console without this variable.
+    </p>
+    {% else %}
+    <p class="vp-hint hint">
+      The SQL console is <strong>off</strong>. Set <code>ENABLE_SQL_CONSOLE=true</code> in your
+      <code>.env</code> (local) or Railway web <strong>Variables</strong>, then restart / redeploy.
+      On Railway, also set <code>SQL_CONSOLE_PASSWORD</code> when the console is enabled.
+    </p>
+    {% endif %}
+  {% else %}
+
+  <p class="vp-sql-intro">
+    Run <strong>one</strong> SQL statement at a time (<code>SELECT</code>, <code>INSERT</code>,
+    <code>UPDATE</code>, <code>DELETE</code>, etc.). Results or row counts appear below.
+    <code>DROP DATABASE</code> / <code>DROP SCHEMA</code> are blocked.
+  </p>
+
+  {% if error %}
+  <p class="vp-sql-error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <form class="vp-sql-form" method="post" action="{{ url_for('sql_console') }}">
+    <label class="vp-sql-label" for="sql">Statement</label>
+    <textarea id="sql" name="sql" class="vp-sql-textarea" rows="10" cols="80"
+      spellcheck="false" placeholder="SELECT * FROM `User` LIMIT 10;">{{ sql_text }}</textarea>
+    {% if sql_console_password_required %}
+    <label class="vp-sql-label" for="sql_console_password">Console password</label>
+    <input id="sql_console_password" name="sql_console_password" type="password"
+      class="vp-sql-input" autocomplete="off" />
+    {% endif %}
+    <div class="vp-sql-actions">
+      <button type="submit" class="vp-sql-submit">Run</button>
+    </div>
+  </form>
+
+  {% if result_kind == 'rows' and payload %}
+  <h2 class="vp-sql-result-title">Result</h2>
+  {% if not payload.rows %}
+  <p class="vp-empty">0 rows.</p>
+  {% else %}
+  <div class="vp-table-wrap" role="region" aria-label="Query result" tabindex="0">
+    <table>
+      <thead>
+        <tr>
+          {% for col in payload.columns %}
+          <th scope="col">{{ col }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in payload.rows %}
+        <tr>
+          {% for col in payload.columns %}
+          <td>{{ row[col] }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% elif result_kind == 'mutate' and payload %}
+  <div class="vp-sql-mutate vp-hint hint">
+    <strong>OK.</strong>
+    Rows affected: {{ payload.rowcount }}.
+    {% if payload.lastrowid %}
+    Last insert id: {{ payload.lastrowid }}.
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% endif %}
+</div>
+{% endblock %}
