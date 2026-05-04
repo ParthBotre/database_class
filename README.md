@@ -176,7 +176,7 @@ So you can force **`VideoPlatform`** even when the URL path says **`railway`**.
 
 Your **local** MySQL and **Railway’s** MySQL are **different**. After deploy, load **`project.sql`** and **`seed_sample_data.sql`** against **Railway’s** server.
 
-#### Option A — Railway CLI (tunnel): migrate from local Workbench → Railway
+### Option A — Railway CLI (tunnel): migrate from local Workbench → Railway
 
 Install and log in once:
 
