@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — VideoPlatform{% endblock %}
+{% block body %}
+<div class="vp-page vp-page--table">
+  <h1>{{ title }}</h1>
+  {% if not rows %}
+    <p class="vp-empty">No rows (empty table or connection issue — check the Flask terminal for errors).</p>
+  {% else %}
+    <div class="vp-table-wrap" role="region" aria-label="{{ title }} data" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            {% for key in rows[0].keys() %}
+              <th scope="col">{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for cell in row.values() %}
+                <td>{{ cell }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

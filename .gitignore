@@ -1,0 +1,10 @@
+# Secrets — never commit (contains MySQL password)
+.env
+
+# Local Python environment (large, machine-specific)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+.DS_Store

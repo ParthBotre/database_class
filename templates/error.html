@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Database error — VideoPlatform{% endblock %}
+{% block body %}
+<div class="vp-page vp-page--error">
+  <h1>Could not load data from MySQL</h1>
+  <p><strong>Server message:</strong> {{ message }}</p>
+  <p>{{ hint|safe }}</p>
+  <p class="vp-hint hint">Then restart the app (<code>Ctrl+C</code> and <code>python app.py</code> again).</p>
+</div>
+{% endblock %}

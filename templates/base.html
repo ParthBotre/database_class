@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}VideoPlatform{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/video-platform-ui.css') }}" />
+</head>
+<body class="vp-app">
+  <header class="vp-header">
+    <div class="vp-header__inner">
+      <a class="vp-brand" href="{{ url_for('home') }}">VideoPlatform</a>
+      <nav class="vp-nav" aria-label="Browse tables">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('users') }}">Users</a>
+        <a href="{{ url_for('creators') }}">Creators</a>
+        <a href="{{ url_for('videos') }}">Videos</a>
+        <a href="{{ url_for('comments') }}">Comments</a>
+        <a href="{{ url_for('subscriptions') }}">Subscriptions</a>
+        <a href="{{ url_for('subtitles') }}">Subtitles</a>
+      </nav>
+    </div>
+  </header>
+  <main class="vp-main">
+    <div class="vp-shell">
+      {% block body %}{% endblock %}
+    </div>
+  </main>
+  <footer class="vp-footer">Local read-only browser · MySQL VideoPlatform schema</footer>
+</body>
+</html>

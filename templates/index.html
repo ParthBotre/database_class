@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}VideoPlatform — local UI{% endblock %}
+{% block body %}
+<div class="vp-page vp-page--home">
+  <div class="vp-hero">
+    <span class="vp-hero__badge">Local UI</span>
+    <h1>Browse your database</h1>
+    <p>This app reads your MySQL database <code>VideoPlatform</code>. Run <code>project.sql</code> then <code>seed_sample_data.sql</code> in Workbench to create and populate the schema. Use the navigation above or the shortcuts below.</p>
+  </div>
+  <div class="vp-card-grid" aria-label="Quick links">
+    <a href="{{ url_for('users') }}">Users <span>Accounts &amp; emails</span></a>
+    <a href="{{ url_for('creators') }}">Creators <span>Channels &amp; subscribers</span></a>
+    <a href="{{ url_for('videos') }}">Videos <span>Views &amp; engagement</span></a>
+    <a href="{{ url_for('comments') }}">Comments <span>Threaded feedback</span></a>
+    <a href="{{ url_for('subscriptions') }}">Subscriptions <span>Viewer ↔ creator</span></a>
+    <a href="{{ url_for('subtitles') }}">Subtitles <span>Contributed captions</span></a>
+  </div>
+  <!-- <p class="vp-hint hint">Copy <code>env.example</code> to <code>.env</code> in this same folder as <code>app.py</code>, set <code>MYSQL_PASSWORD</code> (and <code>MYSQL_USER</code> if not <code>root</code>) to match MySQL Workbench. Run <code>python app.py</code> and open http://127.0.0.1:5000/</p> -->
+</div>
+{% endblock %}
