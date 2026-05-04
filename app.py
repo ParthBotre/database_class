@@ -34,6 +34,14 @@ def handle_mysql_error(err):
             "Database name not found. Run <code>project.sql</code> in Workbench to create "
             "<code>VideoPlatform</code>, or set <code>MYSQL_DATABASE</code> in <code>.env</code>."
         )
+    elif "2003" in msg or "127.0.0.1" in msg or "Can't connect to MySQL server" in msg:
+        hint = (
+            "The app is trying to reach MySQL on <code>127.0.0.1</code> (your laptop’s default). "
+            "On Railway, open your <strong>web</strong> service → <strong>Variables</strong> → add "
+            "<code>MYSQL_URL</code> = <code>${{ MySQL.MYSQL_URL }}</code> (use your MySQL service’s name if not "
+            "<code>MySQL</code>). Optionally set <code>MYSQL_DATABASE=VideoPlatform</code>. "
+            "Redeploy after saving."
+        )
     else:
         hint = (
             "Confirm MySQL is running, the schema matches <code>project.sql</code>, "
