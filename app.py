@@ -92,6 +92,12 @@ def query_all(sql, params=None):
         return rows
 
 
+@app.get("/health")
+def health():
+    """No DB — use for Railway / load balancer checks."""
+    return "ok", 200
+
+
 @app.get("/")
 def home():
     return render_template("index.html")
@@ -176,4 +182,7 @@ def subtitles():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # Railway sets PORT; binding to 5000 only makes the platform kill/restart the container.
+    port = int(os.environ.get("PORT", "5000"))
+    debug = not os.environ.get("RAILWAY_ENVIRONMENT")
+    app.run(debug=debug, host="0.0.0.0", port=port)

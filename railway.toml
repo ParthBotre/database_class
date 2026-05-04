@@ -1,0 +1,4 @@
+# https://docs.railway.com/reference/config-as-code
+# If the dashboard "Start Command" is empty, Railway uses this.
+[deploy]
+startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT"
